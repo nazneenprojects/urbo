@@ -1,6 +1,6 @@
 # URBO : Sustainable Urban Planning Tool 
 
-![urbo_app.png](utils/static/urbo_app.png)
+![urbo_app.png](static/urbo_app.png)
 
 ## Project Summary
 In today's world, urbanization is rapidly increasing, and with it comes the challenge of designing cities that are both 
