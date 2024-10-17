@@ -5,6 +5,7 @@
 import base64
 
 from fastapi import APIRouter, Depends
+from geoalchemy2 import WKTElement
 from sqlalchemy.orm import Session
 
 from urbo_api.db_connect.db import get_db
@@ -19,6 +20,7 @@ router = APIRouter(
     tags=["get-urban-planning-data"],
     responses={404: {"description": "Not Found"}}
 )
+
 
 # FIXME: Fix the logic to fetch from database before reaching to api service
 # response_class=Response
@@ -41,10 +43,10 @@ def get_urban_planning_data(user_input: schema.UrbanPlanningByPlaceCreate, db: S
 
         nearby_places_result = (db.query(models.NearbyPlace).
                                 filter(models.NearbyPlace.keywords == user_input.keywords,
-                                       models.NearbyPlace.ref_location == [geocode_result.latitude, geocode_result.longitude],
+                                       models.NearbyPlace.ref_location == [geocode_result.latitude,
+                                                                           geocode_result.longitude],
                                        models.NearbyPlace.region == user_input.region,
-                                       models.NearbyPlace.radius == user_input.radius)
-                                .first())
+                                       models.NearbyPlace.radius == user_input.radius).first())
 
         if nearby_places_result is None:
             nearby_places_data = NearbyPlacesCreate(
@@ -54,17 +56,30 @@ def get_urban_planning_data(user_input: schema.UrbanPlanningByPlaceCreate, db: S
                 radius=user_input.radius
             )
 
-            nearby_places_result = fetch_nearby_places(nearby_places_data, db)
+            # nearby_places_result = fetch_nearby_places(nearby_places_data, db)
 
     # Fetch Air pollution results based on Latitude and Longitude
-    air_pollution_result = get_air_pollution(geocode_result.latitude, geocode_result.longitude, db)
-    air_pollution_output = air_pollution_result['air_pollution_response'][0]
+    if geocode_result:
+
+        center_coordinates = WKTElement(f'POINT({geocode_result.longitude} {geocode_result.latitude})', srid=4326)
+        air_pollution_result = db.query(models.AirPollution).filter(
+            models.AirPollution.center_coordinates == center_coordinates).first()
+
+        if air_pollution_result is None:
+            air_pollution_result = get_air_pollution(geocode_result.latitude, geocode_result.longitude, db)
+            air_pollution_output = air_pollution_result['air_pollution_response'][0]
 
     # Fetch still Map image (Byte format) based on Latitude and Longitude and other constant params
-    get_still_map_results = get_stillmap(geocode_result.latitude, geocode_result.longitude, user_input.zoom,
-                                         user_input.size, db)
-    map_img_bytes = get_still_map_results["map_img"]
-    map_img_base64 = base64.b64encode(map_img_bytes).decode('utf-8')
+    if geocode_result:
+        get_still_map_results = db.query(models.StillMap).filter(models.StillMap.lat == geocode_result.latitude,
+                                                                 models.StillMap.lon == geocode_result.longitude).first()
+
+        if get_still_map_results is None:
+            get_still_map_results = get_stillmap(geocode_result.latitude, geocode_result.longitude, user_input.zoom,
+                                                 user_input.size, db)
+
+            map_img_bytes = get_still_map_results["map_img"]
+            map_img_base64 = base64.b64encode(map_img_bytes).decode('utf-8')
 
     return {
         "address": geocode_result.address,
