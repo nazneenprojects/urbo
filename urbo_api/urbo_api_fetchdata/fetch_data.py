@@ -17,15 +17,6 @@ from urbo_api.urbo_api_dataload.map_image_api import get_stillmap
 from urbo_api.urbo_api_dataload.schema import NearbyPlacesCreate, GeocodeCreate, PollutantSchema
 from urbo_api.urbo_api_fetchdata.urbo_recommendations import AQILevel, PollutantInfo
 
-# Global variables
-aqi_dict = {
-    1: "Good",
-    2: "Fair",
-    3: "Moderate",
-    4: "Poor",
-    5: "Very Poor"
-}
-
 router = APIRouter(
     tags=["get-urban-planning-data"],
     responses={404: {"description": "Not Found"}}
