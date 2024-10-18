@@ -15,11 +15,11 @@ class UrbanPlanningByPlaceCreate(BaseModel):
     size: str = Field("1000x1000", example="1000x1000")
 
 
-class GeocodeResponseLonLat(BaseModel):
-    address: str = Field(..., example="New Delhi")
-    latitude: float = Field(..., example=77.2090)
-    longitude: float = Field(..., example=28.6139)
-    # map_img: bytes
+class PollutantSchema(BaseModel):
+    pollutant_name: str
+    description: str
+    source: str
+    health_effects: str
 
 
 class AggregateResponse(BaseModel):
@@ -27,8 +27,11 @@ class AggregateResponse(BaseModel):
     latitude: float = Field(..., example=77.2090)
     longitude: float = Field(..., example=28.6139)
     Nearby_places: Any
+    nearby_places_recommendation: str
     air_quality_index: int
+    aqi_recommendation: str
     air_pollution_params: Any
+    pollutants_info: List[PollutantSchema]
     still_map_image: str
 
 

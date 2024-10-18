@@ -14,7 +14,17 @@ from urbo_api.urbo_api_dataload.air_pollution_api import get_air_pollution
 from urbo_api.urbo_api_dataload.data_nearbyplaces_api import fetch_nearby_places
 from urbo_api.urbo_api_dataload.geocode_api import get_geocode
 from urbo_api.urbo_api_dataload.map_image_api import get_stillmap
-from urbo_api.urbo_api_dataload.schema import NearbyPlacesCreate, GeocodeCreate
+from urbo_api.urbo_api_dataload.schema import NearbyPlacesCreate, GeocodeCreate, PollutantSchema
+from urbo_api.urbo_api_fetchdata.urbo_recommendations import AQILevel, PollutantInfo
+
+# Global variables
+aqi_dict = {
+    1: "Good",
+    2: "Fair",
+    3: "Moderate",
+    4: "Poor",
+    5: "Very Poor"
+}
 
 router = APIRouter(
     tags=["get-urban-planning-data"],
@@ -22,7 +32,7 @@ router = APIRouter(
 )
 
 
-@router.post("/aggreegate-endpoint", response_model=schema.AggregateResponse)
+@router.post("/aggregate-endpoint", response_model=schema.AggregateResponse)
 def get_urban_planning_data(user_input: schema.UrbanPlanningByPlaceCreate, db: Session = Depends(get_db)):
     """
     this function acts on top of other api endpoints.
@@ -35,6 +45,8 @@ def get_urban_planning_data(user_input: schema.UrbanPlanningByPlaceCreate, db: S
     map_img_base64 = None
     air_pollution_output = None
     nearby_places_result = None
+    aqi_recommendation = None
+    nearby_places_recommendation = None
 
     # Fetch Longitude and Latitude
     if user_input:
@@ -87,12 +99,57 @@ def get_urban_planning_data(user_input: schema.UrbanPlanningByPlaceCreate, db: S
             map_img_bytes = get_still_map_results["map_img"]
             map_img_base64 = base64.b64encode(map_img_bytes).decode('utf-8')
 
-    return {
+    # Recommendation Logic based on quantitative data received from different 3rd party api services
+    # For Air Quality Index
+    if air_pollution_output['main']['aqi']:
+
+        match air_pollution_output['main']['aqi']:
+            case 1:
+                aqi_recommendation = AQILevel.GOOD
+            case 2:
+                aqi_recommendation = AQILevel.FAIR
+            case 3:
+                aqi_recommendation = AQILevel.MODERATE
+            case 4:
+                aqi_recommendation = AQILevel.POOR
+            case 5:
+                aqi_recommendation = AQILevel.VERY_POOR
+            case _:
+                aqi_recommendation = "Invalid AQI value received"
+
+    # For Air Pollution data
+    pollutants = []
+    for pollutant in PollutantInfo:
+        pollutant_data = PollutantSchema(
+            pollutant_name=pollutant.value["name"],
+            description=pollutant.value["description"],
+            source=pollutant.value["source"],
+            health_effects=pollutant.value["health_effects"]
+        )
+
+        pollutants.append(pollutant_data)
+
+    pollutants_info = pollutants
+
+    # For Nearby found places
+    nearby_places_count = len(nearby_places_result.nearby_places_response["suggestedLocations"])
+
+    if nearby_places_count < 5 and user_input.radius >= 1000:
+        nearby_places_recommendation = f"You have very less {user_input.keywords} in the radius of {user_input.radius} meters "
+    elif nearby_places_count > 5 and user_input.radius <= 1000:
+        nearby_places_recommendation = f"You have good enough {user_input.keywords} in the radius of {user_input.radius} meters "
+
+    response_data = {
         "address": geocode_result.address,
         "latitude": geocode_result.latitude,
         "longitude": geocode_result.longitude,
         "Nearby_places": nearby_places_result.nearby_places_response,
+        "nearby_places_recommendation": nearby_places_recommendation,
         "air_quality_index": air_pollution_output['main']['aqi'],
+        "aqi_recommendation": aqi_recommendation,
         "air_pollution_params": air_pollution_output['components'],
+        "pollutants_info": pollutants_info,
         "still_map_image": f"data:image/png;base64,{map_img_base64}"
     }
+
+    return response_data
