@@ -43,3 +43,8 @@ There is scope to use [Mapple API](https://apis.mappls.com/) or other API endpoi
 Currently, I have created free account, which will give access to less data ( 20  records )
 More info - Ref- https://github.com/mappls-api/mappls-rest-apis/tree/main/mappls-maps-near-by-api-example
 
+
+## Reference 
+Air Quality index is calculated based on -
+
+![img.png](static/img.png)

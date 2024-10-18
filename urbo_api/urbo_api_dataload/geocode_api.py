@@ -25,7 +25,7 @@ router = APIRouter(
 @router.post("/geocode", response_model=schema.GeocodeResponse)
 def get_geocode(geocode_data: schema.GeocodeCreate, db: Session = Depends(get_db)):
     """
-
+    Get the Latitude and Longitude based on address
     :param geocode_data: takes address in string format as user input
     :param db: db_session: DB connection session
     :return:based on given address finds the coordinates  (long and lat)

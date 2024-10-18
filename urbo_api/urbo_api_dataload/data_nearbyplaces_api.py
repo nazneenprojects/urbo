@@ -35,7 +35,7 @@ router = APIRouter(
 )
 
 
-@router.post("/fetch-nearby-places/", response_model=schema.NearbyPlaceResponse)
+@router.get("/fetch-nearby-places/", response_model=schema.NearbyPlaceResponse)
 def fetch_nearby_places(place_data: schema.NearbyPlacesCreate, db_session: Session = Depends(get_db)):
     """
     This helps to fetch nearby places based on

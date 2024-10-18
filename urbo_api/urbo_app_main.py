@@ -15,9 +15,12 @@ from urbo_api.urbo_api_dataload.air_pollution_api import router as air_pollution
 from urbo_api.urbo_api_fetchdata.fetch_data import router as fetch_urban_planning_data
 import sys
 import os
+from pyfiglet import  Figlet
 
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+figlet = Figlet(font='slant')
+text_art = figlet.renderText('URBO')
 
 app = FastAPI(
     title="URBO - Sustainability Tool for Urban Planning",
@@ -27,6 +30,7 @@ app = FastAPI(
 origins = [
     "http://localhost:8080"
 ]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -34,6 +38,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+print("\t \t \t", text_art)
 
 #Add other api endpoints into a common place
 app.include_router(data_load)

@@ -22,11 +22,19 @@ router = APIRouter(
 )
 
 
-# FIXME: Fix the logic to fetch from database before reaching to api service
-# response_class=Response
 @router.post("/aggreegate-endpoint", response_model=schema.AggregateResponse)
 def get_urban_planning_data(user_input: schema.UrbanPlanningByPlaceCreate, db: Session = Depends(get_db)):
+    """
+    this function acts on top of other api endpoints.
+    this check if requested data is present in the database if not then it request from 3rd party api
+    :param user_input: takes input from user - address, keywords, region, radius, zoom, size
+    :param db: db_session: DB connection session
+    :return: returns combined data from different endpoints and also display some recommendations
+    """
     geocode_result = None
+    map_img_base64 = None
+    air_pollution_output = None
+    nearby_places_result = None
 
     # Fetch Longitude and Latitude
     if user_input:
@@ -40,13 +48,11 @@ def get_urban_planning_data(user_input: schema.UrbanPlanningByPlaceCreate, db: S
 
     # Fetch Nearby Places based on Latitude and Longitude
     if geocode_result and user_input:
-
+        ref_location = WKTElement(f'POINT({geocode_result.longitude} {geocode_result.latitude})', srid=4326)
         nearby_places_result = (db.query(models.NearbyPlace).
-                                filter(models.NearbyPlace.keywords == user_input.keywords,
-                                       models.NearbyPlace.ref_location == [geocode_result.latitude,
-                                                                           geocode_result.longitude],
-                                       models.NearbyPlace.region == user_input.region,
-                                       models.NearbyPlace.radius == user_input.radius).first())
+                                filter(models.NearbyPlace.keywords.in_(user_input.keywords),
+                                       models.NearbyPlace.ref_location == ref_location
+                                       ).first())
 
         if nearby_places_result is None:
             nearby_places_data = NearbyPlacesCreate(
@@ -56,7 +62,7 @@ def get_urban_planning_data(user_input: schema.UrbanPlanningByPlaceCreate, db: S
                 radius=user_input.radius
             )
 
-            # nearby_places_result = fetch_nearby_places(nearby_places_data, db)
+            nearby_places_result = fetch_nearby_places(nearby_places_data, db)
 
     # Fetch Air pollution results based on Latitude and Longitude
     if geocode_result:
@@ -71,8 +77,8 @@ def get_urban_planning_data(user_input: schema.UrbanPlanningByPlaceCreate, db: S
 
     # Fetch still Map image (Byte format) based on Latitude and Longitude and other constant params
     if geocode_result:
-        get_still_map_results = db.query(models.StillMap).filter(models.StillMap.lat == geocode_result.latitude,
-                                                                 models.StillMap.lon == geocode_result.longitude).first()
+        center_input = WKTElement(f'POINT({geocode_result.longitude} {geocode_result.latitude})', srid=4326)
+        get_still_map_results = db.query(models.StillMap).filter(models.StillMap.center == center_input).first()
 
         if get_still_map_results is None:
             get_still_map_results = get_stillmap(geocode_result.latitude, geocode_result.longitude, user_input.zoom,
@@ -85,6 +91,7 @@ def get_urban_planning_data(user_input: schema.UrbanPlanningByPlaceCreate, db: S
         "address": geocode_result.address,
         "latitude": geocode_result.latitude,
         "longitude": geocode_result.longitude,
+        "Nearby_places": nearby_places_result.nearby_places_response,
         "air_quality_index": air_pollution_output['main']['aqi'],
         "air_pollution_params": air_pollution_output['components'],
         "still_map_image": f"data:image/png;base64,{map_img_base64}"
