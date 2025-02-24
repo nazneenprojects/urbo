@@ -48,3 +48,13 @@ More info - Ref- https://github.com/mappls-api/mappls-rest-apis/tree/main/mappls
 Air Quality index is calculated based on -
 
 ![img.png](static/img.png)
+
+
+# Web App Architecture Design - 
+
+UI- https://github.com/nazneenprojects/urbo-frontend.git
+![Screenshot from 2025-02-24 19-34-05](https://github.com/user-attachments/assets/6228553c-fbed-46c1-b9ff-2b7d63657477)
+
+Backend - https://github.com/nazneenprojects/urbo.git
+
+Postgres DB - https://render.com/
