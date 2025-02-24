@@ -52,9 +52,15 @@ Air Quality index is calculated based on -
 
 # Web App Architecture Design - 
 
-UI- https://github.com/nazneenprojects/urbo-frontend.git
+### UI- https://github.com/nazneenprojects/urbo-frontend.git
 ![Screenshot from 2025-02-24 19-34-05](https://github.com/user-attachments/assets/6228553c-fbed-46c1-b9ff-2b7d63657477)
 
-Backend - https://github.com/nazneenprojects/urbo.git
+### Backend - https://github.com/nazneenprojects/urbo.git
+### Postgres DB - https://render.com/
 
-Postgres DB - https://render.com/
+####  Pending tasks -
+- To complete the UI screens
+- To Host the backend and frontend over Render
+- To add GithubWorkflow
+- Monitor CI/CD pipeline
+- add Unit test cases to the backend layer
