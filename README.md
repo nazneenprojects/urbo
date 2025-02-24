@@ -56,7 +56,7 @@ Air Quality index is calculated based on -
 ![Screenshot from 2025-02-24 19-34-05](https://github.com/user-attachments/assets/6228553c-fbed-46c1-b9ff-2b7d63657477)
 
 ### Backend - https://github.com/nazneenprojects/urbo.git
-### Postgres DB - https://render.com/
+### Postgresql DB - https://render.com/
 
 ####  Pending tasks -
 - To complete the UI screens
