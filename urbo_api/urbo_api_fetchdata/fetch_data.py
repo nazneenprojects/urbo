@@ -51,7 +51,7 @@ def get_urban_planning_data(user_input: schema.UrbanPlanningByPlaceCreate, db: S
 
     # Fetch Nearby Places based on Latitude and Longitude
     if geocode_result and user_input:
-        ref_location = WKTElement(f'POINT({geocode_result.longitude} {geocode_result.latitude})', srid=4326)
+        ref_location = WKTElement(f'POINT({geocode_result.latitude} {geocode_result.longitude})', srid=4326)
         nearby_places_result = (db.query(models.NearbyPlace).
                                 filter(models.NearbyPlace.keywords.in_(user_input.keywords),
                                        models.NearbyPlace.ref_location == ref_location
@@ -123,7 +123,8 @@ def get_urban_planning_data(user_input: schema.UrbanPlanningByPlaceCreate, db: S
     pollutants_info = pollutants
 
     # For Nearby found places
-    nearby_places_count = len(nearby_places_result.nearby_places_response["suggestedLocations"])
+    # nearby_places_count = len(nearby_places_result.nearby_places_response["suggestedLocations"])
+    nearby_places_count = len(nearby_places_result["nearby_places_response"]["suggestedLocations"])
 
     if nearby_places_count < 5 and user_input.radius >= 1000:
         nearby_places_recommendation = f"You have very less {user_input.keywords} in the radius of {user_input.radius} meters "
@@ -134,7 +135,7 @@ def get_urban_planning_data(user_input: schema.UrbanPlanningByPlaceCreate, db: S
         "address": geocode_result.address,
         "latitude": geocode_result.latitude,
         "longitude": geocode_result.longitude,
-        "Nearby_places": nearby_places_result.nearby_places_response,
+        "Nearby_places": nearby_places_result["nearby_places_response"],
         "nearby_places_recommendation": nearby_places_recommendation,
         "air_quality_index": air_pollution_output['main']['aqi'],
         "aqi_recommendation": aqi_recommendation,

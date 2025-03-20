@@ -46,7 +46,7 @@ class NearbyPlaceResponse(BaseModel):
     id: uuid.UUID
     keywords: List[str] = Field(..., example=["parks"])
     ref_location: List[float] = Field(..., example=[28.6139, 77.2090])
-    nearby_places_response: Any
+    nearby_places_response: str
 
     class Config:
         orm_mode = True
