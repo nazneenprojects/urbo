@@ -81,7 +81,8 @@ class StillMapImageCreate(BaseModel):
 class StillMapImageResponse(BaseModel):
     id: uuid.UUID
     center: List[float] = Field(..., example=[28.6139, 77.2090])
-    map_img: bytes
+    # map_img: bytes
+    map_img: str
 
     class Config:
         arbitrary_types_allowed = True

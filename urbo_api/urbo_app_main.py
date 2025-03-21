@@ -23,22 +23,16 @@ from urbo_api.urbo_api_fetchdata.fetch_data import router as fetch_urban_plannin
 from urbo_ui.frontend_main import init
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-figlet = Figlet(font='slant')
-text_art = figlet.renderText('URBO')
+figlet = Figlet(font="slant")
+text_art = figlet.renderText("URBO")
 
 
-
-app = FastAPI(
-    title="URBO - Sustainability Tool for Urban Planning",
-    version="v0.1.0a"
-)
+app = FastAPI(title="URBO - Sustainability Tool for Urban Planning", version="v0.1.0a")
 
 # init ui
 init(app)
 
-origins = [
-    "http://localhost:8080"
-]
+origins = ["http://localhost:8080"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -48,19 +42,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-#app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "*"])
+# app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "*"])
 logging.basicConfig(level=logging.DEBUG)
 
 print("\t \t \t", text_art)
 
-#Add other api endpoints into a common place
+# Add other api endpoints into a common place
 app.include_router(data_load)
 app.include_router(geocode)
 app.include_router(map)
 app.include_router(air_pollution)
 app.include_router(fetch_urban_planning_data)
 
-logging.getLogger('socketio').setLevel(logging.DEBUG)
+logging.getLogger("socketio").setLevel(logging.DEBUG)
 
 # root welcome api
 @app.get("/")

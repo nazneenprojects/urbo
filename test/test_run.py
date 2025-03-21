@@ -30,6 +30,7 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 
 # ------------------------- FIXTURES -------------------------
 
+
 @pytest.fixture(scope="function")
 def db_session():
     """Create a new database session with a rollback at the end of the test."""
@@ -60,24 +61,13 @@ def test_client(db_session):
 # Mock the API response fixture
 @pytest.fixture
 def here_api_response():
-    return {
-        'items': [
-            {
-                'position': {
-                    'lat': 37.7749,
-                    'lng': -122.4194
-                }
-            }
-        ]
-    }
+    return {"items": [{"position": {"lat": 37.7749, "lng": -122.4194}}]}
 
 
 # Fixture for a successful geocode payload
 @pytest.fixture
 def geocode_payload():
-    return {
-        "address": "San Francisco, CA"
-    }
+    return {"address": "San Francisco, CA"}
 
 
 # ------------------------- TESTS -------------------------
@@ -92,7 +82,7 @@ def test_root(test_client):
 # Test: Successful geocode lookup
 def test_get_geocode_success(test_client, geocode_payload, here_api_response):
     # Mock requests.get to return a successful response
-    with patch('requests.get') as mock_get:
+    with patch("requests.get") as mock_get:
         mock_get.return_value.status_code = 200
         mock_get.return_value.json.return_value = here_api_response
 
@@ -102,18 +92,18 @@ def test_get_geocode_success(test_client, geocode_payload, here_api_response):
         # Assert the status code and returned data
         assert response.status_code == 200
         response_json = response.json()
-        assert response_json['address'] == geocode_payload["address"]
-        assert response_json['latitude'] == 37.7749
-        assert response_json['longitude'] == -122.4194
+        assert response_json["address"] == geocode_payload["address"]
+        assert response_json["latitude"] == 37.7749
+        assert response_json["longitude"] == -122.4194
         assert "geocode_response" in response_json
 
 
 # Test: Address not found in HERE API
 def test_get_geocode_address_not_found(test_client, geocode_payload):
     # Mock requests.get to return an empty list
-    with patch('requests.get') as mock_get:
+    with patch("requests.get") as mock_get:
         mock_get.return_value.status_code = 200
-        mock_get.return_value.json.return_value = {'items': []}
+        mock_get.return_value.json.return_value = {"items": []}
 
         # Make the API request
         response = test_client.post("/geocode", json=geocode_payload)
@@ -121,13 +111,13 @@ def test_get_geocode_address_not_found(test_client, geocode_payload):
         # Assert 404 error for address not found
         assert response.status_code == 404
         response_json = response.json()
-        assert response_json['detail'] == "Address not found"
+        assert response_json["detail"] == "Address not found"
 
 
 # Test: HERE API returns non-200 status code
 def test_get_geocode_here_api_error(test_client, geocode_payload):
     # Mock requests.get to return an error status
-    with patch('requests.get') as mock_get:
+    with patch("requests.get") as mock_get:
         # Service Unavailable
         mock_get.return_value.status_code = 503
 
@@ -137,7 +127,7 @@ def test_get_geocode_here_api_error(test_client, geocode_payload):
         # Assert that it raises the appropriate HTTPException
         assert response.status_code == 503
         response_json = response.json()
-        assert response_json['detail'] == "Error fetching geocode"
+        assert response_json["detail"] == "Error fetching geocode"
 
 
 # Test: Invalid payload (missing address)

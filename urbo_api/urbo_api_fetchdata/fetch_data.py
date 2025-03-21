@@ -80,15 +80,36 @@ def get_urban_planning_data(user_input: schema.UrbanPlanningByPlaceCreate, db: S
 
     # Fetch still Map image (Byte format) based on Latitude and Longitude and other constant params
     if geocode_result:
+        # Try to get from database first
         center_input = WKTElement(f'POINT({geocode_result.longitude} {geocode_result.latitude})', srid=4326)
         get_still_map_results = db.query(models.StillMap).filter(models.StillMap.center == center_input).first()
 
+        # If not in database, fetch from API
         if get_still_map_results is None:
-            get_still_map_results = get_stillmap(geocode_result.latitude, geocode_result.longitude, user_input.zoom,
-                                                 user_input.size, db)
+            # Call the API function to get the still map
+            get_still_map_results = get_stillmap(
+                lat=geocode_result.latitude,
+                lon=geocode_result.longitude,
+                zoom=user_input.zoom,
+                size=user_input.size,
+                db=db
+            )
 
-            map_img_bytes = get_still_map_results["map_img"]
-            map_img_base64 = base64.b64encode(map_img_bytes).decode('utf-8')
+            # The response from get_stillmap already includes the image as base64
+            if isinstance(get_still_map_results, dict) and "map_img" in get_still_map_results:
+                map_img_base64 = get_still_map_results["map_img"]
+            else:
+                map_img_base64 = "data:image/png;base64,"  # Empty but valid base64 string
+        else:
+            # If found in database, encode the binary data
+            if hasattr(get_still_map_results, "map_img") and get_still_map_results.map_img:
+                try:
+                    map_img_base64 = f"data:image/png;base64,{base64.b64encode(get_still_map_results.map_img).decode()}"
+                except Exception as e:
+                    print(f"Error encoding image from database: {e}")
+                    map_img_base64 = "data:image/png;base64,"
+            else:
+                map_img_base64 = "data:image/png;base64,"
 
     # Recommendation Logic based on quantitative data received from different 3rd party api services
     # For Air Quality Index
@@ -141,7 +162,7 @@ def get_urban_planning_data(user_input: schema.UrbanPlanningByPlaceCreate, db: S
         "aqi_recommendation": aqi_recommendation,
         "air_pollution_params": air_pollution_output['components'],
         "pollutants_info": pollutants_info,
-        "still_map_image": f"data:image/png;base64,{map_img_base64}"
+        "still_map_image": map_img_base64
     }
 
     return response_data
